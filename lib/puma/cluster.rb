@@ -296,7 +296,11 @@ module Puma
             m = server.max_threads || 0
             payload = %Q!#{base_payload}{ "backlog":#{b}, "running":#{r}, "pool_capacity":#{t}, "max_threads": #{m} }\n!
             io << payload
-          rescue IOError
+          rescue IOError => e
+            if ENV['PUMA_CUSTOM_DEBUG'] == 'true'
+              STDERR.puts "IOError: #{e.message}\n#{e.backtrace.join("\n")}"
+              STDERR.puts "Worker #{Process.pid} will die"
+            end
             Thread.current.purge_interrupt_queue if Thread.current.respond_to? :purge_interrupt_queue
             break
           end
